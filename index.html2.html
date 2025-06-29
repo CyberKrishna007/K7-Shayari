@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shayari Collection(K-7)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .shayari-card {
+            transition: all 0.3s ease;
+        }
+        .shayari-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .author-badge {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .shayari-card:hover .author-badge {
+            opacity: 1;
+        }
+        .theme-badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <div class="flex justify-center mb-4">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/314dfa0c-f162-40cd-a44f-455c9483d818.png" alt="Vintage ink pot with feather pen on old paper background" class="rounded-full border-4 border-amber-200 p-2 bg-white">
+            </div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">शायरी संग्रह</h1>
+            <p class="text-gray-600">Share and store your favorite poetic expressions</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Input Form -->
+            <div class="bg-white rounded-lg shadow-md p-6 lg:col-span-1">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Create Shayari</h2>
+                <form id="shayariForm" class="space-y-4">
+                    <div>
+                        <label for="shayariText" class="block text-sm font-medium text-gray-700 mb-1">Shayari Text</label>
+                        <textarea id="shayariText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500" required placeholder="दिल को छू जाने वाली शायरी..."></textarea>
+                    </div>
+                    <div>
+                        <label for="authorName" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                        <input type="text" id="authorName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500" required placeholder="Anonymous">
+                    </div>
+                    <div>
+                        <label for="theme" class="block text-sm font-medium text-gray-700 mb-1">Theme</label>
+                        <select id="theme" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <option value="love">Love</option>
+                            <option value="sadness">Sadness</option>
+                            <option value="inspiration">Inspiration</option>
+                            <option value="friendship">Friendship</option>
+                            <option value="life">Life</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-amber-500 text-white py-2 px-4 rounded-md hover:bg-amber-600 transition duration-200">Submit Shayari</button>
+                </form>
+            </div>
+
+            <!-- Shayari Display -->
+            <div class="lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Recent Shayaris</h2>
+                    <div class="flex space-x-2">
+                        <button id="filterAll" class="px-3 py-1 bg-amber-500 text-white rounded-full text-sm">All</button>
+                        <button id="filterLove" class="px-3 py-1 bg-pink-500 text-white rounded-full text-sm">Love</button>
+                        <button id="filterSadness" class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm">Sadness</button>
+                        <button id="filterInspiration" class="px-3 py-1 bg-green-500 text-white rounded-full text-sm">Inspiration</button>
+                    </div>
+                </div>
+
+                <div id="shayariList" class="space-y-4">
+                    <!-- Shayari cards will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize localStorage if empty
+        if (!localStorage.getItem('shayaris')) {
+            const initialShayaris = [
+                {
+                    id: Date.now(),
+                    text: "मौन भी एक भाषा है, जो दिल की बात कह जाती है।",
+                    author: "अज्ञात",
+                    theme: "inspiration",
+                    date: new Date().toISOString()
+                },
+                {
+                    id: Date.now() + 1,
+                    text: "दिल टूटा तो शायरी लिखी, वरना खुशी में तो गाने गाते थे हम।",
+                    author: "राहुल",
+                    theme: "sadness",
+                    date: new Date().toISOString()
+                }
+            ];
+            localStorage.setItem('shayaris', JSON.stringify(initialShayaris));
+        }
+
+        // DOM Elements
+        const shayariForm = document.getElementById('shayariForm');
+        const shayariList = document.getElementById('shayariList');
+        const filterAll = document.getElementById('filterAll');
+        const filterLove = document.getElementById('filterLove');
+        const filterSadness = document.getElementById('filterSadness');
+        const filterInspiration = document.getElementById('filterInspiration');
+
+        // Theme colors mapping
+        const themeColors = {
+            love: 'bg-pink-100 border-pink-200',
+            sadness: 'bg-blue-100 border-blue-200',
+            inspiration: 'bg-green-100 border-green-200',
+            friendship: 'bg-purple-100 border-purple-200',
+            life: 'bg-orange-100 border-orange-200'
+        };
+
+        // Theme emoji mapping
+        const themeEmoji = {
+            love: '❤️',
+            sadness: '💙',
+            inspiration: '💡',
+            friendship: '👫',
+            life: '🌿'
+        };
+
+        // Load shayaris from localStorage
+        function loadShayaris(filter = 'all') {
+            const shayaris = JSON.parse(localStorage.getItem('shayaris')) || [];
+            shayariList.innerHTML = '';
+
+            const filteredShayaris = filter === 'all' 
+                ? shayaris 
+                : shayaris.filter(shayari => shayari.theme === filter);
+
+            filteredShayaris.forEach(shayari => {
+                // Format date
+                const date = new Date(shayari.date);
+                const formattedDate = date.toLocaleDateString('hi-IN', { 
+                    day: 'numeric', 
+                    month: 'short', 
+                    year: 'numeric' 
+                });
+
+                // Create card
+                const card = document.createElement('div');
+                card.className = `shayari-card p-6 rounded-lg border ${themeColors[shayari.theme] || 'bg-gray-50 border-gray-200'} mb-4`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="theme-badge px-3 py-1 rounded-full text-xs font-medium ${themeColors[shayari.theme].replace('bg-', 'text-').replace('-100', '-800')}">
+                            ${themeEmoji[shayari.theme] || '✨'} ${shayari.theme.charAt(0).toUpperCase() + shayari.theme.slice(1)}
+                        </span>
+                        <span class="text-xs text-gray-500">${formattedDate}</span>
+                    </div>
+                    <p class="text-lg mb-4 text-gray-800 leading-relaxed">${shayari.text}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="author-badge text-sm font-medium text-gray-700">— ${shayari.author}</span>
+                        <button onclick="deleteShayari(${shayari.id})" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
+                    </div>
+                `;
+                shayariList.appendChild(card);
+            });
+        }
+
+        // Add new shayari
+        shayariForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const shayariText = document.getElementById('shayariText').value;
+            const authorName = document.getElementById('authorName').value || 'Anonymous';
+            const theme = document.getElementById('theme').value;
+
+            const newShayari = {
+                id: Date.now(),
+                text: shayariText,
+                author: authorName,
+                theme: theme,
+                date: new Date().toISOString()
+            };
+
+            const shayaris = JSON.parse(localStorage.getItem('shayaris')) || [];
+            shayaris.unshift(newShayari); // Add to beginning of array
+            localStorage.setItem('shayaris', JSON.stringify(shayaris));
+
+            // Clear form
+            shayariForm.reset();
+
+            // Reload shayaris
+            loadShayaris();
+
+            // Show success message
+            alert('Your shayari has been added successfully!');
+        });
+
+        // Delete shayari
+        window.deleteShayari = function(id) {
+            if (confirm('Are you sure you want to delete this shayari?')) {
+                const shayaris = JSON.parse(localStorage.getItem('shayaris')) || [];
+                const updatedShayaris = shayaris.filter(shayari => shayari.id !== id);
+                localStorage.setItem('shayaris', JSON.stringify(updatedShayaris));
+                loadShayaris();
+            }
+        };
+
+        // Filter shayaris
+        filterAll.addEventListener('click', () => loadShayaris('all'));
+        filterLove.addEventListener('click', () => loadShayaris('love'));
+        filterSadness.addEventListener('click', () => loadShayaris('sadness'));
+        filterInspiration.addEventListener('click', () => loadShayaris('inspiration'));
+
+        // Initial load
+        loadShayaris();
+    </script>
+</body>
+</html>
+
